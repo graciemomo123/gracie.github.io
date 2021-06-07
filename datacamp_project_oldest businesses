@@ -1,0 +1,103 @@
+1. The oldest business in the world
+%%sql 
+postgresql:///oldestbusinesses
+-- Select the oldest and newest founding years from the businesses table
+SELECT MIN(year_founded), MAX(year_founded)
+    FROM businesses;
+    
+2.How many businesses were founded before 1000?
+%%sql
+-- Get the count of rows in businesses where the founding year was before 1000
+select count (*)
+from businesses
+where year_founded < 1000;
+
+3.Which businesses were founded before 1000?
+%%sql
+-- Select all columns from businesses where the founding year was before 1000
+-- Arrange the results from oldest to newest
+select * 
+from businesses
+where year_founded < 1000
+order by year_founded asc;
+
+4.Exploring the categories
+%%sql
+postgresql:///oldestbusinesses
+-- Select business name, founding year, and country code from businesses; and category from categories
+-- where the founding year was before 1000, arranged from oldest to newest
+select business, year_founded, country_code, category
+from businesses as b
+join categories as c
+on b.category_code = c. category_code
+where year_founded < 1000
+order by year_founded asc;
+
+5.Counting the categories
+%%sql
+postgresql:///oldestbusinesses
+
+-- Select the category and count of category (as "n")
+-- arranged by descending count, limited to 10 most common categories
+select category, count(category) as n
+from categories as c
+join businesses as b 
+on c.category_code = b.category_code
+group by c.category_code
+order by n desc
+limit 10;
+
+6.Oldest business by continent
+%%sql
+postgresql:///oldestbusinesses
+-- Select the oldest founding year (as "oldest") from businesses, 
+-- and continent from countries
+-- for each continent, ordered from oldest to newest 
+select min(year_founded) as oldest, c.continent 
+from businesses as b
+inner join countries as c
+on c.country_code = b.country_code
+group by c.continent
+order by oldest asc;
+
+7.Joining everything for further analysis
+%%sql
+postgresql:///oldestbusinesses
+-- Select the business, founding year, category, country, and continent
+SELECT bus.business, bus.year_founded, cat.category, cnt.country, cnt.continent
+    FROM businesses AS bus
+    INNER JOIN categories as cat
+        ON bus.category_code = cat.category_code
+    INNER JOIN countries as cnt
+        ON bus.country_code = cnt.country_code;
+
+8. Counting categories by continent
+%%sql
+postgresql:///oldestbusinesses
+-- Count the number of businesses in each continent and category
+SELECT continent, category, count(business) as n
+from (
+SELECT bus.business, bus.year_founded, cat.category, cnt.country, cnt.continent
+    FROM businesses AS bus
+    INNER JOIN categories as cat
+        ON bus.category_code = cat.category_code
+    INNER JOIN countries as cnt
+        ON bus.country_code = cnt.country_code) as a1
+group by continent,category;
+
+9. Filtering counts by continent and category
+%%sql
+postgresql:///oldestbusinesses
+-- Repeat that previous query, filtering for results having a count greater than 5
+SELECT continent, category, count(business) as n
+from (
+SELECT bus.business, bus.year_founded, cat.category, cnt.country, cnt.continent
+    FROM businesses AS bus
+    INNER JOIN categories as cat
+        ON bus.category_code = cat.category_code
+    INNER JOIN countries as cnt
+        ON bus.country_code = cnt.country_code) as a1
+group by continent,category
+having count(business) > 5
+order by count(business) desc;
+
